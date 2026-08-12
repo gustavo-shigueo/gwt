@@ -2,6 +2,7 @@ use clap::Parser;
 use color_eyre::Result;
 
 mod command;
+mod config;
 mod init;
 mod list;
 mod remove;
@@ -20,9 +21,6 @@ fn main() -> Result<()> {
         Command::Switch(x) => switch(x),
         Command::Remove(x) => remove(x),
         Command::List => list(),
-        Command::Init(x) => {
-            init(x);
-            Ok(())
-        }
+        Command::Init(x) => init(x),
     }
 }

@@ -1,4 +1,4 @@
-use crate::command::SwitchCommand;
+use crate::{command::SwitchCommand, config::Config};
 use color_eyre::{Result, eyre::eyre};
 use std::path::PathBuf;
 
@@ -6,9 +6,18 @@ pub fn switch(
     SwitchCommand {
         name,
         create,
-        no_develop,
+        no_commit_ish,
     }: SwitchCommand,
 ) -> Result<()> {
+    let mut config_path = std::env::current_exe()?;
+    config_path.pop();
+    config_path.push("gwt.toml");
+
+    let config = std::fs::read_to_string(config_path)
+        .ok()
+        .and_then(|x| toml::from_str::<Config>(&x).ok())
+        .unwrap_or_default();
+
     let rev_parse = std::process::Command::new("git")
         .arg("rev-parse")
         .arg("--show-toplevel")
@@ -24,7 +33,10 @@ pub fn switch(
     directory.push(name.replace('/', "__"));
 
     if create {
-        let status = std::process::Command::new("git").arg("fetch").status()?;
+        let status = std::process::Command::new("git")
+            .arg("fetch")
+            .arg(&config.remote)
+            .status()?;
         if !status.success() {
             return Err(eyre!("git fetch failed"));
         }
@@ -47,8 +59,9 @@ pub fn switch(
 
     command.arg(&name);
 
-    if create && !no_develop {
-        command.arg("origin/develop");
+    if create && !no_commit_ish {
+        let commit_ish = format!("{}/{}", config.remote, config.default_branch);
+        command.arg(commit_ish);
     }
 
     let output = command.output()?;

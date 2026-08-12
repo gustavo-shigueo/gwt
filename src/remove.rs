@@ -1,9 +1,18 @@
-use crate::command::RemoveCommand;
+use crate::{command::RemoveCommand, config::Config};
 use color_eyre::{Result, eyre::eyre};
 use std::path::PathBuf;
 
 pub fn remove(RemoveCommand { name }: RemoveCommand) -> Result<()> {
-    if name == "develop" {
+    let mut config_path = std::env::current_exe()?;
+    config_path.pop();
+    config_path.push("gwt.toml");
+
+    let config = std::fs::read_to_string(config_path)
+        .ok()
+        .and_then(|x| toml::from_str::<Config>(&x).ok())
+        .unwrap_or_default();
+
+    if name == config.default_branch {
         return Err(eyre!("Cannot delete develop worktree"));
     }
 
@@ -16,9 +25,7 @@ pub fn remove(RemoveCommand { name }: RemoveCommand) -> Result<()> {
         return Err(eyre!("git rev-parse failed"));
     }
 
-    let repo_root = PathBuf::from(std::str::from_utf8(&rev_parse.stdout)?.trim_end());
-
-    let mut directory = repo_root.clone();
+    let mut directory = PathBuf::from(std::str::from_utf8(&rev_parse.stdout)?.trim_end());
     directory.pop();
     directory.push(name.replace('/', "__"));
 
@@ -49,8 +56,6 @@ pub fn remove(RemoveCommand { name }: RemoveCommand) -> Result<()> {
             String::from_utf8_lossy(&output.stderr)
         ));
     }
-
-    println!("{}", repo_root.display());
 
     Ok(())
 }

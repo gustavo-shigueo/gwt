@@ -21,10 +21,10 @@ pub struct SwitchCommand {
     #[arg(short)]
     pub create: bool,
 
-    /// By default, whenever you use `-c`, the base branch will be "origin/develop".
+    /// By default, whenever you use `-c`, the base branch will be "`remote`/`default_branch`".
     /// This flag makes it your current HEAD is the base for the new branch instead
     #[arg(long)]
-    pub no_develop: bool,
+    pub no_commit_ish: bool,
 
     /// The name of the branch you wish to switch into
     pub name: String,
@@ -38,6 +38,15 @@ pub struct RemoveCommand {
 
 #[derive(Parser, Debug)]
 pub struct InitCommand {
+    /// Name of the repo's remote
+    #[arg(long, default_value = "origin")]
+    pub remote: String,
+
+    /// Default branch of the repo. Will be used as the `commit_ish`
+    /// for `git worktree`
+    #[arg(long, default_value = "develop")]
+    pub default_branch: String,
+
     /// Which shell script should be generated
     pub shell: Shell,
 }

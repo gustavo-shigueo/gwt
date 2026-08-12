@@ -1,6 +1,6 @@
 [package]
 name = "gwt-bin"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2024"
 description = "CLI tool to facilitate the use of git worktrees"
 license = "MIT OR Apache-2.0"
@@ -29,6 +29,8 @@ as_convertions = "deny"
 [dependencies]
 clap = { version = "4.5.53", features = ["derive"] }
 color-eyre = "0.6.5"
+serde = { version = "1.0.129", features = ["derive"] }
+toml = "1.1.4"
 
 [[bin]]
 name = "gwt-bin"
