@@ -24,6 +24,11 @@ panic = "deny"
 exit = "deny"
 as_convertions = "deny"
 
+[dependencies]
+clap = { version = "4.5.53", features = ["derive"] }
+color-eyre = "0.6.5"
+
 [[bin]]
 name = "gwt-bin"
 path = "src/main.rs"
+
