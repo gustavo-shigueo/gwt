@@ -38,7 +38,7 @@ my_repo/
 `gwt list`
 
 ## Installation
-1. Add `gwt-bin` to a directory in your `PATH`
+1. Run `cargo install gwt-bin`
 2. Follow the instructions for the appropriate shell
 
 ### Nushell
