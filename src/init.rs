@@ -4,6 +4,7 @@ use crate::{
 };
 use color_eyre::Result;
 
+#[allow(clippy::too_many_lines)]
 pub fn init(
     InitCommand {
         shell,
@@ -15,9 +16,58 @@ pub fn init(
         Shell::Nu => {
             format!(
                 r#"
+def "nu-complete gwt" [spans: list<string>] {{
+    let args = ($spans | skip 1)
+    let current = ($args | last | default "")
+
+    if ($args | is-empty) {{
+        return []
+    }}
+
+    let command = ($args | first)
+
+    match $command {{
+        "switch" => {{
+            let positional = (
+                $args
+                | skip 1
+                | where {{ |arg| not ($arg | str starts-with "-") }}
+            )
+
+            # `switch` has exactly one positional argument: name.
+            # If there isn't one yet, or we're currently typing it,
+            # complete branches.
+            if ($positional | is-empty) or (
+                ($positional | last) == $current
+            ) {{
+                ^gwt-bin complete branch $current | lines
+            }} else {{
+                []
+            }}
+        }}
+
+        "remove" => {{
+            if ($args | length) <= 2 {{
+                ^gwt-bin complete branch $current | lines
+            }} else {{
+                []
+            }}
+        }}
+
+        _ => []
+    }}
+}}
+
+@complete 'nu-complete gwt'
 def --env --wrapped gwt [...args] {{
     if (($args | first) == "list") and (($args | length) == 1) {{
         gwt-bin list
+        return
+    }}
+
+    if (($args | first) == "complete") {{
+        gwt-bin ...$args
+
         return
     }}
 
@@ -73,6 +123,11 @@ function gwt {{
         return
     }}
 
+    if ($Args[0] -eq "complete") {{
+        & gwt-bin @Args
+        return
+    }}
+
     # Handle: gwt --help / -h
     if ($Args -contains "--help" -or $Args -contains "-h") {{
         & gwt-bin @Args
@@ -83,6 +138,10 @@ function gwt {{
     $path = (& gwt-bin @Args).Trim()
     Set-Location $path
 }}
+
+$env:COMPLETE = "powershell"
+gwt-bin | Out-String | Invoke-Expression
+Remove-Item Env:\COMPLETE
             "#,
                 default_branch.replace('/', "__")
             )

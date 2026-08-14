@@ -1,7 +1,10 @@
 use clap::{Parser, ValueEnum};
+use clap_complete::ArgValueCompleter;
+
+use crate::branches::complete_branch_candidates;
 
 #[derive(Parser, Debug)]
-pub enum Command {
+pub enum Cli {
     /// Switch to a new or existing worktree
     Switch(SwitchCommand),
 
@@ -13,6 +16,8 @@ pub enum Command {
 
     /// Enable gwt for your shell
     Init(InitCommand),
+
+    Complete(CompleteCommand),
 }
 
 #[derive(Parser, Debug)]
@@ -27,12 +32,14 @@ pub struct SwitchCommand {
     pub no_commit_ish: bool,
 
     /// The name of the branch you wish to switch into
+    #[arg(add = ArgValueCompleter::new(complete_branch_candidates))]
     pub name: String,
 }
 
 #[derive(Parser, Debug)]
 pub struct RemoveCommand {
     /// Name of the brach to be deleted
+    #[arg(add = ArgValueCompleter::new(complete_branch_candidates))]
     pub name: String,
 }
 
@@ -49,6 +56,17 @@ pub struct InitCommand {
 
     /// Which shell script should be generated
     pub shell: Shell,
+}
+
+#[derive(Parser, Debug)]
+pub struct CompleteCommand {
+    #[command(subcommand)]
+    pub command: CompleteSubommand,
+}
+
+#[derive(Parser, Debug)]
+pub enum CompleteSubommand {
+    Branch { current: Option<String> },
 }
 
 #[derive(ValueEnum, Debug, Clone, Copy)]
