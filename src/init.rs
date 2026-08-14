@@ -19,42 +19,18 @@ pub fn init(
 def "nu-complete gwt" [spans: list<string>] {{
     let args = ($spans | skip 1)
     let current = ($args | last | default "")
-
-    if ($args | is-empty) {{
-        return []
-    }}
-
     let command = ($args | first)
 
     match $command {{
         "switch" => {{
-            let positional = (
-                $args
-                | skip 1
-                | where {{ |arg| not ($arg | str starts-with "-") }}
-            )
-
-            # `switch` has exactly one positional argument: name.
-            # If there isn't one yet, or we're currently typing it,
-            # complete branches.
-            if ($positional | is-empty) or (
-                ($positional | last) == $current
-            ) {{
-                ^gwt-bin complete branch $current | lines
-            }} else {{
-                []
-            }}
+            ^gwt-bin complete switch $current | lines
         }}
 
         "remove" => {{
-            if ($args | length) <= 2 {{
-                ^gwt-bin complete branch $current | lines
-            }} else {{
-                []
-            }}
+            ^gwt-bin complete remove $current | lines
         }}
 
-        _ => []
+        _ => (["switch" "list" "remove"] | where (str starts-with $current))
     }}
 }}
 

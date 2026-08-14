@@ -1,7 +1,7 @@
 use clap::{Parser, ValueEnum};
 use clap_complete::ArgValueCompleter;
 
-use crate::branches::complete_branch_candidates;
+use crate::branches::{complete_branch_candidates, complete_worktree_branch_candidates};
 
 #[derive(Parser, Debug)]
 pub enum Cli {
@@ -39,7 +39,7 @@ pub struct SwitchCommand {
 #[derive(Parser, Debug)]
 pub struct RemoveCommand {
     /// Name of the brach to be deleted
-    #[arg(add = ArgValueCompleter::new(complete_branch_candidates))]
+    #[arg(add = ArgValueCompleter::new(complete_worktree_branch_candidates))]
     pub name: String,
 }
 
@@ -66,7 +66,8 @@ pub struct CompleteCommand {
 
 #[derive(Parser, Debug)]
 pub enum CompleteSubommand {
-    Branch { current: Option<String> },
+    Switch { current: Option<String> },
+    Remove { current: Option<String> },
 }
 
 #[derive(ValueEnum, Debug, Clone, Copy)]
