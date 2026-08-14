@@ -13,9 +13,29 @@ pub fn init(
     }: InitCommand,
 ) -> Result<()> {
     let function = match shell {
-        Shell::Nu => {
-            format!(
-                r#"
+        Shell::Nu => init_nu(&default_branch),
+        Shell::Powershell => init_powershell(&default_branch),
+    };
+
+    let mut config_path = std::env::current_exe()?;
+    config_path.pop();
+    config_path.push("gwt.toml");
+
+    let config = Config {
+        default_branch,
+        remote,
+    };
+
+    let buffer = toml::to_string(&config)?;
+    std::fs::write(config_path, buffer)?;
+
+    println!("{}", function.trim());
+    Ok(())
+}
+
+fn init_nu(default_branch: &str) -> String {
+    format!(
+        r#"
 def "nu-complete gwt" [spans: list<string>] {{
     let args = ($spans | skip 1)
     let current = ($args | last | default "")
@@ -67,20 +87,23 @@ def --env --wrapped gwt [...args] {{
     cd $path
 }}
             "#,
-                default_branch.replace('/', "__")
-            )
-        }
-        Shell::Powershell => {
-            format!(
-                r#"
+        default_branch.replace('/', "__")
+    )
+}
+
+fn init_powershell(default_branch: &str) -> String {
+    const POWERSHELL_5_COMPLETE: &str = include_str!("../assets/ps_autocomplete.ps1");
+
+    format!(
+        r#"
 function gwt {{
     param(
         [Parameter(ValueFromRemainingArguments = $true)]
-        [string[]]$Args
+        [string[]]$GwtArgs
     )
 
     # Handle: gwt remove
-    if ($Args.Count -eq 1 -and $Args[0] -eq "remove") {{
+    if ($GwtArgs.Count -eq 1 -and $GwtArgs[0] -eq "remove") {{
         $branch = (git branch --show-current).Trim()
 
         Set-Location ../{}
@@ -94,48 +117,38 @@ function gwt {{
         return
     }}
 
-    if ($Args.Count -eq 1 -and $Args[0] -eq "list") {{
+    if ($GwtArgs.Count -eq 1 -and $GwtArgs[0] -eq "list") {{
         & gwt-bin list
         return
     }}
 
-    if ($Args[0] -eq "complete") {{
-        & gwt-bin @Args
+    if ($GwtArgs[0] -eq "complete") {{
+        & gwt-bin @GwtArgs
         return
     }}
 
     # Handle: gwt --help / -h
-    if ($Args -contains "--help" -or $Args -contains "-h") {{
-        & gwt-bin @Args
+    if ($GwtArgs -contains "--help" -or $GwtArgs -contains "-h") {{
+        & gwt-bin @GwtArgs
         return
     }}
 
     # Run gwt-bin and change to the returned path
-    $path = (& gwt-bin @Args).Trim()
+    $path = (& gwt-bin @GwtArgs).Trim()
     Set-Location $path
 }}
 
 $env:COMPLETE = "powershell"
-gwt-bin | Out-String | Invoke-Expression
+
+if ($PSVersionTable.PSVersion.Major -ge 6) {{
+    gwt-bin | Out-String | Invoke-Expression
+}} else {{
+    {}
+}}
+
 Remove-Item Env:\COMPLETE
             "#,
-                default_branch.replace('/', "__")
-            )
-        }
-    };
-
-    let mut config_path = std::env::current_exe()?;
-    config_path.pop();
-    config_path.push("gwt.toml");
-
-    let config = Config {
-        default_branch,
-        remote,
-    };
-
-    let buffer = toml::to_string(&config)?;
-    std::fs::write(config_path, buffer)?;
-
-    println!("{}", function.trim());
-    Ok(())
+        default_branch.replace('/', "__"),
+        POWERSHELL_5_COMPLETE
+    )
 }
