@@ -18,6 +18,9 @@ pub enum Cli {
     /// Enable gwt for your shell
     Init(InitCommand),
 
+    /// Update origin registry and merge into current branch
+    Sync,
+
     Complete(CompleteCommand),
 }
 
