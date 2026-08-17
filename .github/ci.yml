@@ -1,0 +1,10 @@
+on: [push, pull_request]
+name: clippy
+jobs:
+  clippy:
+    name: Run "cargo clippy"
+    runs-on: ubuntu
+    steps:
+    - uses: actions/checkout@v4
+    - name: Build
+      run: cargo clippy
