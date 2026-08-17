@@ -61,6 +61,12 @@ def --env --wrapped gwt [...args] {{
         return
     }}
 
+    if (($args | first) == "sync") {{
+        gwt-bin ...$args
+
+        return
+    }}
+
     if (($args | first) == "complete") {{
         gwt-bin ...$args
 
@@ -119,6 +125,11 @@ function gwt {{
 
     if ($GwtArgs.Count -eq 1 -and $GwtArgs[0] -eq "list") {{
         & gwt-bin list
+        return
+    }}
+
+    if ($GwtArgs[0] -eq "sync") {{
+        & gwt-bin @GwtArgs
         return
     }}
 
