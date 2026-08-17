@@ -10,6 +10,7 @@ mod init;
 mod list;
 mod remove;
 mod switch;
+mod sync;
 
 use crate::command::Cli;
 use crate::complete::complete;
@@ -17,6 +18,7 @@ use crate::init::init;
 use crate::list::list;
 use crate::remove::remove;
 use crate::switch::switch;
+use crate::sync::sync;
 
 fn command() -> Command {
     let mut cmd = Cli::command();
@@ -31,6 +33,7 @@ fn main() -> Result<()> {
 
     match command {
         Cli::Switch(x) => switch(x),
+        Cli::Sync => sync(),
         Cli::Remove(x) => remove(x),
         Cli::List => list(),
         Cli::Init(x) => init(x),
