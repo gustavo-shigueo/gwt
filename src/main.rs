@@ -33,7 +33,7 @@ fn main() -> Result<()> {
 
     match command {
         Cli::Switch(x) => switch(x),
-        Cli::Sync => sync(),
+        Cli::Sync(x) => sync(x),
         Cli::Remove(x) => remove(x),
         Cli::List => list(),
         Cli::Init(x) => init(x),

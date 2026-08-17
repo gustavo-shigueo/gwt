@@ -19,7 +19,7 @@ pub enum Cli {
     Init(InitCommand),
 
     /// Update origin registry and merge into current branch
-    Sync,
+    Sync(SyncCommand),
 
     Complete(CompleteCommand),
 }
@@ -72,6 +72,15 @@ pub struct CompleteCommand {
 pub enum CompleteSubommand {
     Switch { current: Option<String> },
     Remove { current: Option<String> },
+}
+
+#[derive(Parser, Debug)]
+pub struct SyncCommand {
+    #[arg(long)]
+    pub rebase: bool,
+
+    #[arg(long)]
+    pub autostash: bool,
 }
 
 #[derive(ValueEnum, Debug, Clone, Copy)]
