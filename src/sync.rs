@@ -32,7 +32,6 @@ pub fn sync() -> Result<()> {
         return Err(eyre!("git fetch failed"));
     }
 
-    println!("Remote repository updated");
 
     let merge_command = std::process::Command::new("git")
         .arg("merge")
@@ -53,11 +52,9 @@ pub fn sync() -> Result<()> {
             return Err(eyre!("git merge failed"));
         }
 
-        println!("Git merge has conflicts");
         return Ok(());
     }
 
-    println!("Git merge succeeded");
 
     Ok(())
 }
