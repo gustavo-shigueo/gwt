@@ -35,7 +35,7 @@ Register-ArgumentCompleter -Native -CommandName gwt -ScriptBlock {
                 }
             }
         } else {
-            @("switch", "remove", "list", "init", "complete") |
+            @("switch", "remove", "list", "init", "complete", "sync") |
                 ForEach-Object {
                     [System.Management.Automation.CompletionResult]::new(
                         $_,
