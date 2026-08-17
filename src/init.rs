@@ -89,6 +89,11 @@ def --env --wrapped gwt [...args] {{
         return
     }}
 
+    if ("--version" in $args) or ("-V" in $args) {{
+        ^gwt-bin ...$args
+        return
+    }}
+
     let path = (gwt-bin ...$args | str trim)
     cd $path
 }}
@@ -140,6 +145,12 @@ function gwt {{
 
     # Handle: gwt --help / -h
     if ($GwtArgs -contains "--help" -or $GwtArgs -contains "-h") {{
+        & gwt-bin @GwtArgs
+        return
+    }}
+
+    # Handle: gwt --version
+    if ($GwtArgs -contains "--version" -or $GwtArgs -contains "-V") {{
         & gwt-bin @GwtArgs
         return
     }}

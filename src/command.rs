@@ -4,7 +4,7 @@ use clap_complete::ArgValueCompleter;
 use crate::branches::{complete_branch_candidates, complete_worktree_branch_candidates};
 
 #[derive(Parser, Debug)]
-#[clap(bin_name = "gwt")]
+#[clap(bin_name = "gwt", version)]
 pub enum Cli {
     /// Switch to a new or existing worktree
     Switch(SwitchCommand),
