@@ -1,8 +1,8 @@
-use crate::config::Config;
+use crate::{command::SyncCommand, config::Config};
 
 use color_eyre::{Result, eyre::eyre};
 
-pub fn sync() -> Result<()> {
+pub fn sync(SyncCommand { rebase, autostash }: SyncCommand) -> Result<()> {
     let mut config_path = std::env::current_exe()?;
     config_path.pop();
     config_path.push("gwt.toml");
@@ -21,8 +21,6 @@ pub fn sync() -> Result<()> {
         return Err(eyre!("git rev-parse failed"));
     }
 
-    println!("Getting references from remote repository");
-
     let fetch_command = std::process::Command::new("git")
         .arg("fetch")
         .arg(&config.remote)
@@ -32,13 +30,23 @@ pub fn sync() -> Result<()> {
         return Err(eyre!("git fetch failed"));
     }
 
+    let mut merge_command = std::process::Command::new("git");
 
-    let merge_command = std::process::Command::new("git")
-        .arg("merge")
+    if rebase {
+        merge_command.arg("rebase");
+    } else {
+        merge_command.arg("merge");
+    }
+
+    if autostash {
+        merge_command.arg("--autostash");
+    }
+
+    let output = merge_command
         .arg(format!("{}/{}", config.remote, config.default_branch))
         .status()?;
 
-    if !merge_command.success() {
+    if !output.success() {
         let merge_has_conflict = std::process::Command::new("git")
             .arg("diff")
             .arg("--name-only")
@@ -54,7 +62,6 @@ pub fn sync() -> Result<()> {
 
         return Ok(());
     }
-
 
     Ok(())
 }
