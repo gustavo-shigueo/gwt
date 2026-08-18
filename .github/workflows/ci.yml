@@ -3,7 +3,7 @@ name: clippy
 jobs:
   clippy:
     name: Run "cargo clippy"
-    runs-on: ubuntu
+    runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
     - name: Build
