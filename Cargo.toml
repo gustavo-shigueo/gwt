@@ -17,7 +17,7 @@ expect_used = "deny"
 enum_glob_use = "deny"
 indexing_slicing = "deny"
 arithmetic_side_effects = "deny"
-ureachable = "deny"
+unreachable = "deny"
 unimplemented = "deny"
 unchecked_time_subtraction = "deny"
 todo = "deny"
@@ -25,7 +25,7 @@ string_slice = "deny"
 panic_in_result_fn = "deny"
 panic = "deny"
 exit = "deny"
-as_convertions = "deny"
+as_conversions = "deny"
 
 [dependencies]
 clap = { version = "4.5.53", features = ["derive"] }
