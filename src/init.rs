@@ -160,15 +160,13 @@ function gwt {{
     Set-Location $path
 }}
 
-$env:COMPLETE = "powershell"
-
 if ($PSVersionTable.PSVersion.Major -ge 6) {{
+    $env:COMPLETE = "powershell"
     gwt-bin | Out-String | Invoke-Expression
+    Remove-Item Env:\COMPLETE
 }} else {{
     {}
 }}
-
-Remove-Item Env:\COMPLETE
             "#,
         default_branch.replace('/', "__"),
         POWERSHELL_5_COMPLETE
