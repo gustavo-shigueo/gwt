@@ -50,7 +50,7 @@ def "nu-complete gwt" [spans: list<string>] {{
             ^gwt-bin complete remove $current | lines
         }}
 
-        _ => (["switch" "list" "remove"] | where (str starts-with $current))
+        _ => (["switch" "list" "remove" "sync"] | where (str starts-with $current))
     }}
 }}
 
