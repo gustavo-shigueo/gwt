@@ -19,6 +19,42 @@ my_repo/
     |__ hotfix__2/ (the branch is expected to be called `hotfix/2`)
 ```
 
+## Features
+
+This CLI provides a few improvements to the workflow of creating, switching and
+removing worktrees:
+
+### Switch
+
+The `gwt switch <BRANCH>` command is designed to be as similar as possible to
+a simple `git switch <BRANCH>`, making the process of switching worktrees almost
+identical to switching branches.
+
+### Create
+
+Similar to switching, the `gwt switch -c <BRANCH>` command is designed to be as
+similar as possible to `git switch -c <BRANCH>`.
+
+This does have a few ergonomic improvements over `git worktree add <PATH> -b <BRANCH> origin/main`
+though. Obviously, the command is way shorter. This is because, as explained
+earlier, this CLI makes assumptions about how it's used.
+
+For starters, you don't need to provide both a branch name and a worktree path,
+because they are assumed to be the same, with the path being a sibling directory
+to your repo's root, named after your branch (`/` are replaced with `__`).
+
+Second, unless you explicitly request otherwise with the `--no-commit-ish` flag,
+it always creates your new branch based on your remote default branch (as configured
+in the `init` command). It even performs a `git fetch` before creating the worktree
+to make sure you are up to date with your remote work.
+
+### Remove
+
+Removing a worktree also deletes its corresponding branch, so you don't have to
+run both `git worktree remove <PATH>` and `git branch -d <BRANCH>`. Instead,
+you just run `gwt remove <BRANCH>`. Furthermore, if you want to delete the worktree
+you are currently on, you can just run `gwt remove`.
+
 ## Usage
 
 ### Navigating between worktrees
