@@ -27,12 +27,12 @@ pub fn switch(
         return Err(eyre!("git rev-parse failed"));
     }
 
-    let repo_root = PathBuf::from(std::str::from_utf8(&rev_parse.stdout)?.trim_end());
-    let mut directory = repo_root.clone();
-    directory.pop();
-    directory.push(name.replace('/', "__"));
+    let current_worktree = PathBuf::from(std::str::from_utf8(&rev_parse.stdout)?.trim_end());
+    let mut target_worktree = current_worktree.clone();
+    target_worktree.pop();
+    target_worktree.push(name.replace('/', "__"));
 
-    if create {
+    if create && !no_commit_ish {
         let status = std::process::Command::new("git")
             .arg("fetch")
             .arg(&config.remote)
@@ -42,17 +42,17 @@ pub fn switch(
         }
     }
 
-    if directory.is_dir() {
+    if target_worktree.is_dir() {
         if create {
             return Err(eyre!("A directory named after this branch already exists"));
         }
 
-        println!("{}", directory.display());
+        println!("{}", target_worktree.display());
         return Ok(());
     }
 
     let mut command = std::process::Command::new("git");
-    command.arg("worktree").arg("add").arg(&directory);
+    command.arg("worktree").arg("add").arg(&target_worktree);
     if create {
         command.arg("-b");
     }
@@ -73,15 +73,19 @@ pub fn switch(
         ));
     }
 
-    let original_env = repo_root.join(".env");
+    let mut main_worktree = current_worktree;
+    main_worktree.pop();
+    main_worktree.push(config.default_branch.replace('/', "__"));
+
+    let original_env = main_worktree.join(".env");
     if original_env.is_file() {
-        let new_env = directory.join(".env");
+        let new_env = target_worktree.join(".env");
         std::fs::copy(&original_env, &new_env)?;
     }
 
-    let original_node_modules = repo_root.join("node_modules");
+    let original_node_modules = main_worktree.join("node_modules");
     if original_node_modules.is_dir() {
-        let new_node_modules = directory.join("node_modules");
+        let new_node_modules = target_worktree.join("node_modules");
 
         #[cfg(target_os = "windows")]
         std::os::windows::fs::symlink_dir(&original_node_modules, &new_node_modules)?;
@@ -90,7 +94,7 @@ pub fn switch(
         std::os::unix::fs::symlink(&original_node_modules, &new_node_modules)?;
     }
 
-    println!("{}", directory.display());
+    println!("{}", target_worktree.display());
 
     Ok(())
 }
