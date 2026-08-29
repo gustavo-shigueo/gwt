@@ -27,7 +27,7 @@ pub enum Cli {
 #[derive(Parser, Debug)]
 pub struct SwitchCommand {
     /// Use this flag to create a new branch and switch into its new worktree
-    #[arg(short)]
+    #[arg(short, long)]
     pub create: bool,
 
     /// By default, whenever you use `-c`, the base branch will be "`remote`/`default_branch`".
@@ -45,6 +45,10 @@ pub struct RemoveCommand {
     /// Name of the brach to be deleted
     #[arg(add = ArgValueCompleter::new(complete_worktree_branch_candidates))]
     pub name: String,
+
+    // Discard uncommited changes in the worktree
+    #[arg(short, long)]
+    pub force: bool,
 }
 
 #[derive(Parser, Debug)]

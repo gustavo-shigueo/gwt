@@ -2,7 +2,7 @@ use crate::{command::RemoveCommand, config::Config};
 use color_eyre::{Result, eyre::eyre};
 use std::path::PathBuf;
 
-pub fn remove(RemoveCommand { name }: RemoveCommand) -> Result<()> {
+pub fn remove(RemoveCommand { name, force }: RemoveCommand) -> Result<()> {
     let mut config_path = std::env::current_exe()?;
     config_path.pop();
     config_path.push("gwt.toml");
@@ -29,11 +29,14 @@ pub fn remove(RemoveCommand { name }: RemoveCommand) -> Result<()> {
     directory.pop();
     directory.push(name.replace('/', "__"));
 
-    let output = std::process::Command::new("git")
-        .arg("worktree")
-        .arg("remove")
-        .arg(&directory)
-        .output()?;
+    let mut command = std::process::Command::new("git");
+    command.arg("worktree").arg("remove").arg(&directory);
+
+    if force {
+        command.arg("--force");
+    }
+
+    let output = command.output()?;
 
     if !output.status.success() {
         return Err(eyre!(
