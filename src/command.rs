@@ -92,4 +92,5 @@ pub struct SyncCommand {
 pub enum Shell {
     Nu,
     Powershell,
+    Bash,
 }
