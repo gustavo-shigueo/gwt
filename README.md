@@ -48,6 +48,13 @@ it always creates your new branch based on your remote default branch (as config
 in the `init` command). It even performs a `git fetch` before creating the worktree
 to make sure you are up to date with your remote work.
 
+Third, instead of just creating a branch and worktree, this command also checks
+if you have a `.env` file. If so, it makes a copy of it in the new directory.
+The same check is done for your `node_modules` directory, but instead of making
+a copy, a symbolic link is created, this makes it so you don't have to reinstall
+your packages from scratch and you also don't have a lot of wasted disk space
+with copies of the same repo's dependencies.
+
 ### Remove
 
 Removing a worktree also deletes its corresponding branch, so you don't have to
@@ -91,5 +98,12 @@ You may change `DEFAULT_BRANCH` and `origin` to fit your needs
 Add the following to your `$PROFILE`:
 
 `Invoke-Expression (& { (gwt-bin init powershell --default-branch DEFAULT_BRANCH --remote origin | Out-String) })`
+
+You may change `DEFAULT_BRANCH` and `origin` to fit your needs
+
+### Bash
+Add the following to your `~/.bash_profile`:
+
+`source <(gwt-bin init bash --default-branch DEFAULT_BRANCH --remote origin)`
 
 You may change `DEFAULT_BRANCH` and `origin` to fit your needs

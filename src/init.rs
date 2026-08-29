@@ -15,6 +15,7 @@ pub fn init(
     let function = match shell {
         Shell::Nu => init_nu(&default_branch),
         Shell::Powershell => init_powershell(&default_branch),
+        Shell::Bash => init_bash(&default_branch),
     };
 
     let mut config_path = std::env::current_exe()?;
@@ -170,5 +171,90 @@ if ($PSVersionTable.PSVersion.Major -ge 6) {{
             "#,
         default_branch.replace('/', "__"),
         POWERSHELL_5_COMPLETE
+    )
+}
+
+fn init_bash(default_branch: &str) -> String {
+    format!(
+        r#"
+_gwt_completion() {{
+    local current command
+    current="${{COMP_WORDS[COMP_CWORD]}}"
+    command="${{COMP_WORDS[1]}}"
+
+    case "$command" in
+        switch)
+            COMPREPLY=(
+                $(gwt-bin complete switch "$current" 2>/dev/null)
+            )
+            ;;
+        remove)
+            COMPREPLY=(
+                $(gwt-bin complete remove "$current" 2>/dev/null)
+            )
+            ;;
+        *)
+            local commands="switch list remove sync"
+            COMPREPLY=(
+                $(compgen -W "$commands" -- "$current")
+            )
+            ;;
+    esac
+}}
+
+gwt() {{
+    # gwt list
+    if [[ "${{1:-}}" == "list" && $# -eq 1 ]]; then
+        gwt-bin list
+        return
+    fi
+
+    # gwt sync ...
+    if [[ "${{1:-}}" == "sync" ]]; then
+        gwt-bin "$@"
+        return
+    fi
+
+    # gwt complete ...
+    if [[ "${{1:-}}" == "complete" ]]; then
+        gwt-bin "$@"
+        return
+    fi
+
+    # gwt remove
+    if [[ "${{1:-}}" == "remove" && $# -eq 1 ]]; then
+        local branch
+        branch="$(git branch --show-current | tr -d '[:space:]')"
+
+        cd ../{} || return
+
+        gwt-bin remove "$branch" &
+        return
+    fi
+
+    # Pass --help/-h directly to gwt-bin
+    if [[ " $* " == *" --help "* || " $* " == *" -h "* ]]; then
+        gwt-bin "$@"
+        return
+    fi
+
+    # Pass --version/-V directly to gwt-bin
+    if [[ " $* " == *" --version "* || " $* " == *" -V "* ]]; then
+        gwt-bin "$@"
+        return
+    fi
+
+    # Execute gwt-bin, trim whitespace, and cd to the resulting path
+    local path
+    path="$(gwt-bin "$@" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+
+    if [[ -n "$path" ]]; then
+        cd "$path" || return
+    fi
+}}
+
+complete -F _gwt_completion gwt
+        "#,
+        default_branch.replace('/', "__")
     )
 }
