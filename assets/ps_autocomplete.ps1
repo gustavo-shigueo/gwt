@@ -58,7 +58,7 @@ Register-ArgumentCompleter -Native -CommandName gwt -ScriptBlock {
     }
 
     $results = Invoke-Expression @"
-& "c:\\users\\administrador\\.cargo\\bin\\gwt-bin.exe" -- $args
+& "gwt-bin" -- $args
 "@;
     if ($null -eq $prev) {
         Remove-Item Env:\COMPLETE;
