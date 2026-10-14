@@ -57,8 +57,18 @@ def "nu-complete gwt" [spans: list<string>] {{
 
 @complete 'nu-complete gwt'
 def --env --wrapped gwt [...args] {{
-    if (($args | first) == "list") and (($args | length) == 1) {{
-        gwt-bin list
+    if ("--help" in $args) or ("-h" in $args) {{
+        ^gwt-bin ...$args
+        return
+    }}
+
+    if ("--version" in $args) or ("-V" in $args) {{
+        ^gwt-bin ...$args
+        return
+    }}
+
+    if ($args | first) == "list" {{
+        ^gwt-bin ...$args
         return
     }}
 
@@ -85,16 +95,6 @@ def --env --wrapped gwt [...args] {{
         return
     }}
 
-    if ("--help" in $args) or ("-h" in $args) {{
-        ^gwt-bin ...$args
-        return
-    }}
-
-    if ("--version" in $args) or ("-V" in $args) {{
-        ^gwt-bin ...$args
-        return
-    }}
-
     let path = (gwt-bin ...$args | str trim)
     cd $path
 }}
@@ -114,23 +114,20 @@ function gwt {{
         [string[]]$GwtArgs
     )
 
-    # Handle: gwt remove
-    if ($GwtArgs.Count -eq 1 -and $GwtArgs[0] -eq "remove") {{
-        $branch = (git branch --show-current).Trim()
-
-        Set-Location ../{}
-
-        # Run in the background
-        Start-Job -ScriptBlock {{
-            param($branch)
-            & gwt-bin remove $branch
-        }} -ArgumentList $branch | Out-Null
-
+    # Handle: gwt --help / -h
+    if ($GwtArgs -contains "--help" -or $GwtArgs -contains "-h") {{
+        & gwt-bin @GwtArgs
         return
     }}
 
-    if ($GwtArgs.Count -eq 1 -and $GwtArgs[0] -eq "list") {{
-        & gwt-bin list
+    # Handle: gwt --version
+    if ($GwtArgs -contains "--version" -or $GwtArgs -contains "-V") {{
+        & gwt-bin @GwtArgs
+        return
+    }}
+
+    if ($GwtArgs[0] -eq "list") {{
+        & gwt-bin @GwtArgs
         return
     }}
 
@@ -144,15 +141,18 @@ function gwt {{
         return
     }}
 
-    # Handle: gwt --help / -h
-    if ($GwtArgs -contains "--help" -or $GwtArgs -contains "-h") {{
-        & gwt-bin @GwtArgs
-        return
-    }}
+    # Handle: gwt remove
+    if ($GwtArgs.Count -eq 1 -and $GwtArgs[0] -eq "remove") {{
+        $branch = (git branch --show-current).Trim()
 
-    # Handle: gwt --version
-    if ($GwtArgs -contains "--version" -or $GwtArgs -contains "-V") {{
-        & gwt-bin @GwtArgs
+        Set-Location ../{}
+
+        # Run in the background
+        Start-Job -ScriptBlock {{
+            param($branch)
+            & gwt-bin remove $branch
+        }} -ArgumentList $branch | Out-Null
+
         return
     }}
 
@@ -203,9 +203,21 @@ _gwt_completion() {{
 }}
 
 gwt() {{
+    # Pass --help/-h directly to gwt-bin
+    if [[ " $* " == *" --help "* || " $* " == *" -h "* ]]; then
+        gwt-bin "$@"
+        return
+    fi
+
+    # Pass --version/-V directly to gwt-bin
+    if [[ " $* " == *" --version "* || " $* " == *" -V "* ]]; then
+        gwt-bin "$@"
+        return
+    fi
+
     # gwt list
-    if [[ "${{1:-}}" == "list" && $# -eq 1 ]]; then
-        gwt-bin list
+    if [[ "${{1:-}}" == "list" ]]; then
+        gwt-bin "$@"
         return
     fi
 
@@ -229,18 +241,6 @@ gwt() {{
         cd ../{} || return
 
         gwt-bin remove "$branch" &
-        return
-    fi
-
-    # Pass --help/-h directly to gwt-bin
-    if [[ " $* " == *" --help "* || " $* " == *" -h "* ]]; then
-        gwt-bin "$@"
-        return
-    fi
-
-    # Pass --version/-V directly to gwt-bin
-    if [[ " $* " == *" --version "* || " $* " == *" -V "* ]]; then
-        gwt-bin "$@"
         return
     fi
 
