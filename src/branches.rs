@@ -22,7 +22,7 @@ pub fn complete_branches(current: Option<&str>) -> Vec<String> {
     current.map_or_else(git_branches, |current| {
         git_branches()
             .into_iter()
-            .filter(|x| x.starts_with(current))
+            .filter(|x| x.contains(current))
             .collect()
     })
 }
@@ -34,7 +34,7 @@ pub fn complete_branch_candidates(current: &OsStr) -> Vec<CompletionCandidate> {
 
     git_branches()
         .into_iter()
-        .filter(|x| x.starts_with(current))
+        .filter(|x| x.contains(current))
         .map(CompletionCandidate::new)
         .collect()
 }
@@ -61,7 +61,7 @@ pub fn complete_worktree_branches(current: Option<&str>) -> Vec<String> {
     current.map_or_else(worktree_branches, |current| {
         worktree_branches()
             .into_iter()
-            .filter(|x| x.starts_with(current))
+            .filter(|x| x.contains(current))
             .collect()
     })
 }
@@ -73,7 +73,7 @@ pub fn complete_worktree_branch_candidates(current: &OsStr) -> Vec<CompletionCan
 
     worktree_branches()
         .into_iter()
-        .filter(|x| x.starts_with(current))
+        .filter(|x| x.contains(current))
         .map(CompletionCandidate::new)
         .collect()
 }
