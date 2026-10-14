@@ -80,7 +80,10 @@ you are currently on, you can just run `gwt remove`.
 `gwt list`
 
 ## Installation
-1. Run `cargo install gwt-bin`
+1. Install the binary using whichever method you prefer:
+   - `cargo binstall gwt-bin` (prebuilt binary for Linux x86_64/arm64, macOS x86_64/arm64 and Windows x86_64/arm64)
+   - `cargo install gwt-bin` (build from source)
+   - download an archive from the [releases page](https://github.com/gustavo-shigueo/gwt/releases)
 2. Follow the instructions for the appropriate shell
 
 ## Windows specific warning:
