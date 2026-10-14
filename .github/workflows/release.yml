@@ -1,0 +1,195 @@
+name: release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  verify:
+    name: Verify tag and run checks
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Read version from Cargo.toml
+        id: version
+        run: |
+          version="$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -n 1)"
+          if [ -z "$version" ]; then
+            echo "::error::Could not read version from Cargo.toml"
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Check tag matches Cargo.toml
+        if: github.ref_type == 'tag'
+        env:
+          TAG_NAME: ${{ github.ref_name }}
+          CARGO_VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          if [ "${TAG_NAME#v}" != "$CARGO_VERSION" ]; then
+            echo "::error::Tag $TAG_NAME does not match Cargo.toml version $CARGO_VERSION"
+            exit 1
+          fi
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+
+      - name: Run clippy
+        run: cargo clippy --locked
+
+      - name: Run tests
+        run: cargo test --locked
+
+  build:
+    name: Build ${{ matrix.target }}
+    needs: verify
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-latest
+            target: x86_64-unknown-linux-musl
+            musl: true
+          - runner: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-musl
+            musl: true
+          - runner: macos-latest
+            target: aarch64-apple-darwin
+            musl: false
+          - runner: macos-latest
+            target: x86_64-apple-darwin
+            musl: false
+          - runner: windows-latest
+            target: x86_64-pc-windows-msvc
+            musl: false
+          - runner: windows-11-arm
+            target: aarch64-pc-windows-msvc
+            musl: false
+    env:
+      VERSION: ${{ needs.verify.outputs.version }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install musl tools
+        if: matrix.musl
+        run: sudo apt-get update && sudo apt-get install -y musl-tools
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.target }}
+
+      - name: Build
+        run: cargo build --release --locked --target ${{ matrix.target }}
+
+      - name: Package (unix)
+        if: runner.os != 'Windows'
+        run: |
+          archive="gwt-bin-v${VERSION}-${{ matrix.target }}.tgz"
+          tar -czf "$archive" -C "target/${{ matrix.target }}/release" gwt-bin
+          ls -l "$archive"
+          echo "ARCHIVE=$archive" >> "$GITHUB_ENV"
+
+      - name: Package (windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $archive = "gwt-bin-v$env:VERSION-${{ matrix.target }}.zip"
+          Compress-Archive -Path "target\${{ matrix.target }}\release\gwt-bin.exe" -DestinationPath $archive
+          Get-Item $archive | Format-List Name, Length
+          "ARCHIVE=$archive" >> $env:GITHUB_ENV
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: gwt-bin-${{ matrix.target }}
+          path: ${{ env.ARCHIVE }}
+          if-no-files-found: error
+
+  release:
+    name: Publish crates.io and GitHub release
+    needs: [verify, build]
+    if: github.ref_type == 'tag'
+    runs-on: ubuntu-latest
+    env:
+      VERSION: ${{ needs.verify.outputs.version }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/download-artifact@v8
+        with:
+          path: ${{ runner.temp }}/dist
+          merge-multiple: true
+
+      - name: Generate checksums
+        run: |
+          cd "$RUNNER_TEMP/dist"
+          sha256sum *.tgz *.zip > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+
+      - name: Check crates.io token is configured
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        run: |
+          if curl -fsS -A gwt-release-workflow "https://crates.io/api/v1/crates/gwt-bin/$VERSION" > /dev/null 2>&1; then
+            echo "gwt-bin $VERSION is already on crates.io; token not required"
+          elif [ -z "$CARGO_REGISTRY_TOKEN" ]; then
+            echo "::error::Secret CARGO_REGISTRY_TOKEN is not set"
+            exit 1
+          fi
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Create draft GitHub release
+        run: |
+          if gh release view "v$VERSION" > /dev/null 2>&1; then
+            echo "Release v$VERSION already exists, refreshing assets"
+            gh release upload "v$VERSION" "$RUNNER_TEMP"/dist/* --clobber
+          else
+            gh release create "v$VERSION" --verify-tag --draft --generate-notes "$RUNNER_TEMP"/dist/*
+          fi
+
+      - name: Publish to crates.io
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        run: |
+          if curl -fsS -A gwt-release-workflow "https://crates.io/api/v1/crates/gwt-bin/$VERSION" > /dev/null 2>&1; then
+            echo "gwt-bin $VERSION is already on crates.io; skipping publish"
+          else
+            cargo publish --locked
+          fi
+
+      - name: Publish GitHub release
+        run: gh release edit "v$VERSION" --draft=false
+
+      - name: Write summary
+        run: |
+          {
+            echo "## gwt-bin v$VERSION"
+            echo ""
+            echo "Published to crates.io and GitHub Releases."
+            echo ""
+            echo '```'
+            echo "cargo binstall gwt-bin"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
