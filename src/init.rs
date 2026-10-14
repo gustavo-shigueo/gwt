@@ -84,12 +84,13 @@ def --env --wrapped gwt [...args] {{
         return
     }}
 
-    if (($args | first) == "remove") and (($args | length) == 1) {{
+    if (($args | first) == "remove") and ((($args | skip 1) | all {{|arg| $arg | str starts-with "-"}})) {{
         let branch = (git branch --show-current | str trim)
+        let flags = ($args | skip 1)
         cd ../{}
 
         job spawn {{
-            gwt-bin remove $branch
+            gwt-bin remove $branch ...$flags
         }}
 
         return
@@ -142,16 +143,19 @@ function gwt {{
     }}
 
     # Handle: gwt remove
-    if ($GwtArgs.Count -eq 1 -and $GwtArgs[0] -eq "remove") {{
+    if ($GwtArgs[0] -eq "remove" -and @($GwtArgs | Select-Object -Skip 1 | Where-Object {{ $_ -notlike "-*" }}).Count -eq 0) {{
         $branch = (git branch --show-current).Trim()
+        $flags = @($GwtArgs | Select-Object -Skip 1) -join ' '
 
         Set-Location ../{}
 
         # Run in the background
         Start-Job -ScriptBlock {{
-            param($branch)
-            & gwt-bin remove $branch
-        }} -ArgumentList $branch | Out-Null
+            param($branch, $flags)
+            $extra = @()
+            if ($flags) {{ $extra = $flags -split ' ' }}
+            & gwt-bin remove $branch @extra
+        }} -ArgumentList $branch, $flags | Out-Null
 
         return
     }}
@@ -234,14 +238,20 @@ gwt() {{
     fi
 
     # gwt remove
-    if [[ "${{1:-}}" == "remove" && $# -eq 1 ]]; then
-        local branch
-        branch="$(git branch --show-current | tr -d '[:space:]')"
+    if [[ "${{1:-}}" == "remove" ]]; then
+        local branch arg bare=1
+        for arg in "${{@:2}}"; do
+            [[ "$arg" == -* ]] || {{ bare=0; break; }}
+        done
 
-        cd ../{} || return
+        if [[ $bare -eq 1 ]]; then
+            branch="$(git branch --show-current | tr -d '[:space:]')"
 
-        gwt-bin remove "$branch" &
-        return
+            cd ../{} || return
+
+            gwt-bin remove "$branch" "${{@:2}}" &
+            return
+        fi
     fi
 
     # Execute gwt-bin, trim whitespace, and cd to the resulting path
