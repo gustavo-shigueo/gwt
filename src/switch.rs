@@ -9,6 +9,12 @@ pub fn switch(
         no_commit_ish,
     }: SwitchCommand,
 ) -> Result<()> {
+    if name.contains('\'') || name.contains("__") {
+        return Err(eyre!(
+            r#"gwt cannot handle branch names that include "'" or "__""#
+        ));
+    }
+
     let mut config_path = std::env::current_exe()?;
     config_path.pop();
     config_path.push("gwt.toml");
