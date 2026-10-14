@@ -3,6 +3,12 @@ use color_eyre::{Result, eyre::eyre};
 use std::path::PathBuf;
 
 pub fn remove(RemoveCommand { name, force }: RemoveCommand) -> Result<()> {
+    if name.contains('\'') || name.contains("__") {
+        return Err(eyre!(
+            r#"gwt cannot handle branch names that include "'" or "__""#
+        ));
+    }
+
     let mut config_path = std::env::current_exe()?;
     config_path.pop();
     config_path.push("gwt.toml");

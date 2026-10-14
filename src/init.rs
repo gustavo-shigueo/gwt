@@ -2,9 +2,8 @@ use crate::{
     command::{InitCommand, Shell},
     config::Config,
 };
-use color_eyre::Result;
+use color_eyre::{Result, eyre::eyre};
 
-#[allow(clippy::too_many_lines)]
 pub fn init(
     InitCommand {
         shell,
@@ -12,6 +11,12 @@ pub fn init(
         remote,
     }: InitCommand,
 ) -> Result<()> {
+    if default_branch.contains('\'') || default_branch.contains("__") {
+        return Err(eyre!(
+            r#"gwt cannot handle branch names that include "'" or "__""#
+        ));
+    }
+
     let function = match shell {
         Shell::Nu => init_nu(&default_branch),
         Shell::Powershell => init_powershell(&default_branch),
