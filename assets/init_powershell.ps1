@@ -62,86 +62,86 @@ if ($PSVersionTable.PSVersion.Major -ge 6) {
     gwt-bin | Out-String | Invoke-Expression
     Remove-Item Env:\COMPLETE
 } else {
-Register-ArgumentCompleter -Native -CommandName gwt -ScriptBlock {
-    param($wordToComplete, $commandAst, $cursorPosition)
+  Register-ArgumentCompleter -Native -CommandName gwt -ScriptBlock {
+      param($wordToComplete, $commandAst, $cursorPosition)
 
-    if ($wordToComplete -eq "") {
-        $elements = @($commandAst.CommandElements | ForEach-Object { $_.SafeGetValue() })
+      if ($wordToComplete -eq "") {
+          $elements = @($commandAst.CommandElements | ForEach-Object { $_.SafeGetValue() })
 
-        if ($elements.Count -ge 2) {
-            switch ($elements[1]) {
-                "switch" {
-                    & gwt-bin complete switch |
-                        ForEach-Object {
-                            [System.Management.Automation.CompletionResult]::new(
-                                $_,
-                                $_,
-                                [System.Management.Automation.CompletionResultType]::ParameterValue,
-                                $_
-                            )
-                        }
+          if ($elements.Count -ge 2) {
+              switch ($elements[1]) {
+                  "switch" {
+                      & gwt-bin complete switch |
+                          ForEach-Object {
+                              [System.Management.Automation.CompletionResult]::new(
+                                  $_,
+                                  $_,
+                                  [System.Management.Automation.CompletionResultType]::ParameterValue,
+                                  $_
+                              )
+                          }
 
-                    return
-                }
+                      return
+                  }
 
-                "remove" {
-                    & gwt-bin complete remove |
-                        ForEach-Object {
-                            [System.Management.Automation.CompletionResult]::new(
-                                $_,
-                                $_,
-                                [System.Management.Automation.CompletionResultType]::ParameterValue,
-                                $_
-                            )
-                        }
+                  "remove" {
+                      & gwt-bin complete remove |
+                          ForEach-Object {
+                              [System.Management.Automation.CompletionResult]::new(
+                                  $_,
+                                  $_,
+                                  [System.Management.Automation.CompletionResultType]::ParameterValue,
+                                  $_
+                              )
+                          }
 
-                    return
-                }
-            }
-        } else {
-            @("switch", "remove", "list", "init", "complete", "sync") |
-                ForEach-Object {
-                    [System.Management.Automation.CompletionResult]::new(
-                        $_,
-                        $_,
-                        [System.Management.Automation.CompletionResultType]::ParameterValue,
-                        $_
-                    )
-                }
-            return
-        }
-    }
+                      return
+                  }
+              }
+          } else {
+              @("switch", "remove", "list", "init", "complete", "sync") |
+                  ForEach-Object {
+                      [System.Management.Automation.CompletionResult]::new(
+                          $_,
+                          $_,
+                          [System.Management.Automation.CompletionResultType]::ParameterValue,
+                          $_
+                      )
+                  }
+              return
+          }
+      }
 
-    $prev = $env:COMPLETE;
-    $env:COMPLETE = "powershell";
+      $prev = $env:COMPLETE;
+      $env:COMPLETE = "powershell";
 
-    $args = $commandAst.Extent.Text
-    $args = $args.Substring(0, [math]::Min($cursorPosition, $args.Length));
-    if ($wordToComplete -eq "") {
-        $args += " ''";
-    }
+      $args = $commandAst.Extent.Text
+      $args = $args.Substring(0, [math]::Min($cursorPosition, $args.Length));
+      if ($wordToComplete -eq "") {
+          $args += " ''";
+      }
 
-    $results = Invoke-Expression @"
-& "gwt-bin" -- $args
-"@;
-    if ($null -eq $prev) {
-        Remove-Item Env:\COMPLETE;
-    } else {
-        $env:COMPLETE = $prev;
-    }
+      $results = Invoke-Expression @"
+  & "gwt-bin" -- $args
+  "@;
+      if ($null -eq $prev) {
+          Remove-Item Env:\COMPLETE;
+      } else {
+          $env:COMPLETE = $prev;
+      }
 
-    $results | ForEach-Object {
-        $split = $_.Split("`t");
-        $cmd = $split[0];
+      $results | ForEach-Object {
+          $split = $_.Split("`t");
+          $cmd = $split[0];
 
-        if ($split.Length -eq 2) {
-            $help = $split[1];
-        }
-        else {
-            $help = $split[0];
-        }
+          if ($split.Length -eq 2) {
+              $help = $split[1];
+          }
+          else {
+              $help = $split[0];
+          }
 
-        [System.Management.Automation.CompletionResult]::new($cmd, $cmd, 'ParameterValue', $help)
-    }
-};
+          [System.Management.Automation.CompletionResult]::new($cmd, $cmd, 'ParameterValue', $help)
+      }
+  };
 }
