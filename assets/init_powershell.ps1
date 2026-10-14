@@ -1,3 +1,67 @@
+function gwt {
+    param(
+        [Parameter(ValueFromRemainingArguments = $true)]
+        [string[]]$GwtArgs
+    )
+
+    # Handle: gwt --help / -h
+    if ($GwtArgs -contains "--help" -or $GwtArgs -contains "-h") {
+        & gwt-bin @GwtArgs
+        return
+    }
+
+    # Handle: gwt --version
+    if ($GwtArgs -contains "--version" -or $GwtArgs -contains "-V") {
+        & gwt-bin @GwtArgs
+        return
+    }
+
+    if ($GwtArgs[0] -eq "list") {
+        & gwt-bin @GwtArgs
+        return
+    }
+
+    if ($GwtArgs[0] -eq "sync") {
+        & gwt-bin @GwtArgs
+        return
+    }
+
+    if ($GwtArgs[0] -eq "complete") {
+        & gwt-bin @GwtArgs
+        return
+    }
+
+    # Handle: gwt remove
+    if ($GwtArgs[0] -eq "remove" -and @($GwtArgs | Select-Object -Skip 1 | Where-Object { $_ -notlike "-*" }).Count -eq 0) {
+        $branch = (git branch --show-current).Trim()
+        $flags = @($GwtArgs | Select-Object -Skip 1) -join ' '
+
+        Set-Location -LiteralPath '../_GWT_DEFAULT_BRANCH_'
+
+        # Run in the background
+        Start-Job -ScriptBlock {
+            param($branch, $flags)
+            $extra = @()
+            if ($flags) { $extra = $flags -split ' ' }
+            & gwt-bin remove $branch @extra
+        } -ArgumentList $branch, $flags | Out-Null
+
+        return
+    }
+
+    # Run gwt-bin and change to the returned path
+    $path = & gwt-bin @GwtArgs
+
+    if ($null -ne $path) {
+        Set-Location $path.Trim()
+    }
+}
+
+if ($PSVersionTable.PSVersion.Major -ge 6) {
+    $env:COMPLETE = "powershell"
+    gwt-bin | Out-String | Invoke-Expression
+    Remove-Item Env:\COMPLETE
+} else {
 Register-ArgumentCompleter -Native -CommandName gwt -ScriptBlock {
     param($wordToComplete, $commandAst, $cursorPosition)
 
@@ -80,4 +144,4 @@ Register-ArgumentCompleter -Native -CommandName gwt -ScriptBlock {
         [System.Management.Automation.CompletionResult]::new($cmd, $cmd, 'ParameterValue', $help)
     }
 };
-
+}
