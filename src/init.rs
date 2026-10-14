@@ -161,8 +161,11 @@ function gwt {{
     }}
 
     # Run gwt-bin and change to the returned path
-    $path = (& gwt-bin @GwtArgs).Trim()
-    Set-Location $path
+    $path = & gwt-bin @GwtArgs
+
+    if ($null -ne $path) {{
+        Set-Location $path.Trim()
+    }}
 }}
 
 if ($PSVersionTable.PSVersion.Major -ge 6) {{
