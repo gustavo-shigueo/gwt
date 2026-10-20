@@ -122,8 +122,8 @@ if ($PSVersionTable.PSVersion.Major -ge 6) {
       }
 
       $results = Invoke-Expression @"
-  & "gwt-bin" -- $args
-  "@;
+& "gwt-bin" -- $args
+"@;
       if ($null -eq $prev) {
           Remove-Item Env:\COMPLETE;
       } else {
