@@ -48,6 +48,8 @@ def --env --wrapped gwt [...args] {
     if (($args | first) == "remove") and ((($args | skip 1) | all {|arg| $arg | str starts-with "-"})) {
         let branch = (git branch --show-current | str trim)
         let flags = ($args | skip 1)
+
+        cd (git rev-parse --show-toplevel | str trim)
         cd '../_GWT_DEFAULT_BRANCH_'
 
         job spawn {
