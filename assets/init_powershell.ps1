@@ -33,9 +33,11 @@ function gwt {
 
     # Handle: gwt remove
     if ($GwtArgs[0] -eq "remove" -and @($GwtArgs | Select-Object -Skip 1 | Where-Object { $_ -notlike "-*" }).Count -eq 0) {
+        $root = (git rev-parse --show-toplevel).Trim()
         $branch = (git branch --show-current).Trim()
         $flags = @($GwtArgs | Select-Object -Skip 1) -join ' '
 
+        Set-Location -LiteralPath $root
         Set-Location -LiteralPath '../_GWT_DEFAULT_BRANCH_'
 
         # Run in the background
