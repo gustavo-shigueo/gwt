@@ -64,7 +64,7 @@ gwt() {
         if [[ $bare -eq 1 ]]; then
             branch="$(git branch --show-current | tr -d '[:space:]')"
 
-            root="$(git rev-parse --show-toplevel | tr -d '[:space:]')"
+            root="$(git rev-parse --show-toplevel)"
             cd "$root"
             cd '../_GWT_DEFAULT_BRANCH_' || return
 
