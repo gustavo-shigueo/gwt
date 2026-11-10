@@ -33,20 +33,13 @@ function gwt {
 
     # Handle: gwt remove
     if ($GwtArgs[0] -eq "remove" -and @($GwtArgs | Select-Object -Skip 1 | Where-Object { $_ -notlike "-*" }).Count -eq 0) {
-        $root = (git rev-parse --show-toplevel).Trim()
         $branch = (git branch --show-current).Trim()
-        $flags = @($GwtArgs | Select-Object -Skip 1) -join ' '
+        $flags = $GwtArgs | Select-Object -Skip 1
 
-        Set-Location -LiteralPath $root
-        Set-Location -LiteralPath '../_GWT_DEFAULT_BRANCH_'
+        Set-Location (git rev-parse --show-toplevel).Trim()
+        Set-Location ../_GWT_DEFAULT_BRANCH_
 
-        # Run in the background
-        Start-Job -ScriptBlock {
-            param($branch, $flags)
-            $extra = @()
-            if ($flags) { $extra = $flags -split ' ' }
-            & gwt-bin remove $branch @extra
-        } -ArgumentList $branch, $flags | Out-Null
+        & gwt-bin remove $branch @flags
 
         return
     }
