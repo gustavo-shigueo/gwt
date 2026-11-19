@@ -50,6 +50,8 @@ def --env --wrapped gwt [...args] {
 
         ^gwt-bin ...$args
 
+        cd './_GWT_DEFAULT_BRANCH_'
+
         return
     }
 

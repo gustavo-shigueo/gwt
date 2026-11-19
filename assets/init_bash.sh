@@ -59,6 +59,9 @@ gwt() {
         cd "$(git rev-parse --show-toplevel)"
 
         gwt-bin "$@"
+
+        cd './_GWT_DEFAULT_BRANCH_'
+
         return
     fi
 
