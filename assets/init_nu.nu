@@ -12,7 +12,7 @@ def "nu-complete gwt" [spans: list<string>] {
             ^gwt-bin complete remove $current | lines
         }
 
-        _ => (["switch" "list" "remove" "sync"] | where (str starts-with $current))
+        _ => (["switch" "setup" "list" "remove" "sync"] | where (str starts-with $current))
     }
 }
 
@@ -34,13 +34,21 @@ def --env --wrapped gwt [...args] {
     }
 
     if (($args | first) == "sync") {
-        gwt-bin ...$args
+        ^gwt-bin ...$args
 
         return
     }
 
     if (($args | first) == "complete") {
-        gwt-bin ...$args
+        ^gwt-bin ...$args
+
+        return
+    }
+
+    if (($args | first) == "setup") {
+        cd (git rev-parse --show-toplevel | str trim)
+
+        ^gwt-bin ...$args
 
         return
     }

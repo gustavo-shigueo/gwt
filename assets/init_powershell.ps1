@@ -31,6 +31,13 @@ function gwt {
         return
     }
 
+    if ($GwtArgs[0] -eq "setup") {
+        Set-Location (git rev-parse --show-toplevel).Trim()
+
+        & gwt-bin @GwtArgs
+        return
+    }
+
     # Handle: gwt remove
     if ($GwtArgs[0] -eq "remove" -and @($GwtArgs | Select-Object -Skip 1 | Where-Object { $_ -notlike "-*" }).Count -eq 0) {
         $branch = (git branch --show-current).Trim()
@@ -94,7 +101,7 @@ if ($PSVersionTable.PSVersion.Major -ge 6) {
                   }
               }
           } else {
-              @("switch", "remove", "list", "init", "complete", "sync") |
+              @("switch", "setup", "remove", "list", "init", "complete", "sync") |
                   ForEach-Object {
                       [System.Management.Automation.CompletionResult]::new(
                           $_,

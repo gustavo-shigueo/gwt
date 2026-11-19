@@ -19,6 +19,11 @@ my_repo/
     |__ hotfix__2/ (the branch is expected to be called `hotfix/2`)
 ```
 
+To get your repo setup, first make sure you have no active worktrees and checkout your
+`DEFAULT_BRANCH`. Then run `gwt setup`. This will move all of your repo's files into
+a directory called `DEFAULT_BRANCH`. `cd` into this directory and now you can work
+normally.
+
 ## Features
 
 This CLI provides a few improvements to the workflow of creating, switching and
