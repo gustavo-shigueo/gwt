@@ -35,6 +35,9 @@ function gwt {
         Set-Location (git rev-parse --show-toplevel).Trim()
 
         & gwt-bin @GwtArgs
+
+        Set-Location ./_GWT_DEFAULT_BRANCH_
+
         return
     }
 
