@@ -15,7 +15,7 @@ _gwt_completion() {
             )
             ;;
         *)
-            local commands="switch list remove sync"
+            local commands="switch setup list remove sync"
             COMPREPLY=(
                 $(compgen -W "$commands" -- "$current")
             )
@@ -50,6 +50,14 @@ gwt() {
 
     # gwt complete ...
     if [[ "${1:-}" == "complete" ]]; then
+        gwt-bin "$@"
+        return
+    fi
+
+    # gwt setup
+    if [[ "${1:-}" == "setup" ]]; then
+        cd "$(git rev-parse --show-toplevel)"
+
         gwt-bin "$@"
         return
     fi

@@ -9,6 +9,7 @@ mod config;
 mod init;
 mod list;
 mod remove;
+mod setup;
 mod switch;
 mod sync;
 
@@ -17,6 +18,7 @@ use crate::complete::complete;
 use crate::init::init;
 use crate::list::list;
 use crate::remove::remove;
+use crate::setup::setup;
 use crate::switch::switch;
 use crate::sync::sync;
 
@@ -37,6 +39,7 @@ fn main() -> Result<()> {
         Cli::Remove(x) => remove(x),
         Cli::List => list(),
         Cli::Init(x) => init(x),
+        Cli::Setup => setup(),
         Cli::Complete(x) => {
             complete(x);
             Ok(())

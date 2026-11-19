@@ -21,6 +21,9 @@ pub enum Cli {
     /// Update origin registry and merge into current branch
     Sync(SyncCommand),
 
+    /// Creates the repo's folder structure
+    Setup,
+
     Complete(CompleteCommand),
 }
 
