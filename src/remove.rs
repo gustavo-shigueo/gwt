@@ -54,7 +54,7 @@ pub fn remove(RemoveCommand { name, force }: RemoveCommand) -> Result<()> {
 
     let output = std::process::Command::new("git")
         .arg("branch")
-        .arg("-d")
+        .arg(if force { "-D" } else { "-d" })
         .arg(&name)
         .output()?;
 
